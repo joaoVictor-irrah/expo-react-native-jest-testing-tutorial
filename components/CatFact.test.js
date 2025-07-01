@@ -1,5 +1,6 @@
 import { render, waitFor } from "@testing-library/react-native";
 import CatFact from "./CatFact";
+import { act } from "@testing-library/react-native";
 
 describe("CatFact", () => {
   it("displays cat fact", async () => {
@@ -38,16 +39,22 @@ describe("CatFact", () => {
     expect(catFactElement).toBeTruthy();
   });
 
-  it("displays no cat fact due to loading", async () => {
-    fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve([]),
-      })
+  it("displays loading while fetching", async () => {
+    let resolveFetch;
+    global.fetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
     );
 
     const { getByText } = render(<CatFact />);
+    expect(getByText("Loading...")).toBeTruthy();
 
-    const catFactElement = getByText("Loading...");
-    expect(catFactElement).toBeTruthy();
+    await act(async () => {
+      resolveFetch({
+        json: () => Promise.resolve([]),
+      });
+    });
   });
 });
